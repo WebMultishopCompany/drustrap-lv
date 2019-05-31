@@ -1,0 +1,7 @@
+drustrap_theme.blank:
+  path: '/home'
+  defaults:
+    _controller: '\Drupal\drustrap_theme\Controller\BlankController::build'
+    _title_callback: '\Drupal\drustrap_theme\Controller\BlankController::title'
+  requirements:
+    _permission: 'access content'

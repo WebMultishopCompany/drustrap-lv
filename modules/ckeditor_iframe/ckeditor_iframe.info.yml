@@ -1,0 +1,9 @@
+name: CKEditor Iframe plugin
+type: module
+description: This plugin allows inserting iframe.
+core: 8.x
+package: CKEditor
+version: VERSION
+dependencies:
+  - ckeditor
+  - ckeditor_fakeobjects

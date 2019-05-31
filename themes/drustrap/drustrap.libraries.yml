@@ -1,0 +1,63 @@
+bootstrap:
+  css:
+    theme:
+      vendor/bootstrap/css/bootstrap.min.css: {}
+  js:
+    vendor/bootstrap/js/bootstrap.min.js: {}
+  dependencies:
+    - core/jquery
+    - drustrap/popper
+
+slick:
+  css:
+    component:
+      vendor/slick/slick.css: {}
+  js:
+    vendor/slick/slick.min.js: {}
+  dependencies:
+    - core/jquery
+
+bootstrap.attributes:
+  js:
+    js/bootstrap/attributes.js: {}
+  dependencies:
+    - core/jquery
+    - core/underscore
+
+bootstrap.drupal:
+  js:
+    js/bootstrap/drupal.bootstrap.js: {}
+  dependencies:
+    - core/jquery
+    - core/drupal
+    - core/drupalSettings
+
+bootstrap.theme:
+  js:
+    js/bootstrap/theme.js: {}
+  dependencies:
+    - drustrap/bootstrap.drupal
+    - drustrap/bootstrap.attributes
+
+bootstrap.modal:
+  js:
+    js/bootstrap/modal.js: {}
+  dependencies:
+    - drustrap/bootstrap.theme
+
+bootstrap.dialog:
+  js:
+    js/bootstrap/dialog.js: {}
+  dependencies:
+    - drustrap/bootstrap.modal
+
+bootstrap.dialog.ajax:
+  js:
+    js/bootstrap/dialog.ajax.js: {}
+  dependencies:
+    - core/drupal.ajax
+    - drustrap/bootstrap.dialog
+
+popper:
+  js:
+    vendor/popper/popper.min.js: {}

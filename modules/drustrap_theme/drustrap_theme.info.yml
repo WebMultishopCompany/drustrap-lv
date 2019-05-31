@@ -1,0 +1,6 @@
+name: Drustrap theme
+type: module
+description: Provides additional functionality for Drustrap theme
+core: 8.x
+version: 8.x-1.0.0
+package: Theme

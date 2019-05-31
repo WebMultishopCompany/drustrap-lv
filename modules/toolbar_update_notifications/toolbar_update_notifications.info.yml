@@ -1,0 +1,8 @@
+name : 'Toolbar admin notifications'
+description : 'Removes update notifications from message area and places info in toolbar.'
+core: 8.x
+package: Administration
+type: module
+
+dependencies:
+  - update

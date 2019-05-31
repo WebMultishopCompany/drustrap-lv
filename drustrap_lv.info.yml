@@ -1,0 +1,122 @@
+name: Drustrap LV
+type: profile
+description: 'Install with commonly used features pre-configured for projects in Latvia.'
+version: VERSION
+core: 8.x
+distribution:
+  name: Drustrap standard (LV)
+  langcode: lv
+install:
+  - node
+# history is not necessary for most projects, handled by Google Analytics
+#  - history
+  - block
+  - breakpoint
+  - ckeditor
+# color changing themes usually do not provide such a feature
+#  - color
+  - config
+# comment feature is not used most of time
+#  - comment
+  - contextual
+# contact is replaced by webform if needed at all
+#  - contact
+  - menu_link_content
+  - datetime
+  - block_content
+  - quickedit
+  - editor
+  - help
+  - image
+  - menu_ui
+  - options
+  - path
+  - page_cache
+  - dynamic_page_cache
+# big_pipe not used most of time
+#  - big_pipe
+  - taxonomy
+  - dblog
+  - search
+  - shortcut
+  - toolbar
+  - field_ui
+  - file
+  - rdf
+  - views
+  - views_ui
+  - tour
+  - automated_cron
+# Additions to standard profile
+  - config_translation
+  - content_translation
+  - datetime
+  - field
+  - filter
+  - language
+  - link
+  - locale
+  - text
+  - user
+  - kint
+  - layout_builder
+# Vendor modules
+## To replace core CSS & JS aggregator
+  - advagg
+  - advagg_js_minify
+  - advagg_css_minify
+## Chaos Tool Suite for development
+  - ctools
+## Links for CKEditor
+  - linkit
+  - editor_advanced_link
+  - editor_file
+## Use exposed data values as variables in various fields
+  - token
+## Generate URL aliases automatically
+  - pathauto
+## Development helper tools
+  - devel
+  - admin_toolbar_tools
+  - config_ignore
+## Paragraphs
+  - paragraphs
+  - entity_reference_revisions
+## Generate sitemap.xml automatically
+  - simple_sitemap
+## Provide view for sitemap
+  - sitemap
+## Addition to Adminimal theme for syling toolbar
+  - adminimal_admin_toolbar
+## 3rd party CSS interface libraries
+  - libraries
+  - fontawesome
+  - fontawesome_menu_icons
+## Addition to "summary field"
+  - smart_trim
+## For sending authenticated e-mail
+  - smtp
+  - mailsystem
+  - swiftmailer
+## For custom form creation
+  - webform
+## For images and other media
+  - media
+  - media_library
+# Bundled modules
+## Themes
+  - drustrap_theme
+## Displays color coded "Update" button in toolbar instead of alerting for update
+  - toolbar_update_notifications
+## CKEditor addons for Iframe embedding
+  - ckeditor_fakeobjects
+  - ckeditor_iframe
+## Bootstrap additons to CKEditor
+  - ckeditor_bootstrap_include
+  - ckeditor_bootstrap_table
+  - ckeditor_bootstrap_tools
+themes:
+  - drustrap
+  - bartik
+  - seven
+  - adminimal_theme

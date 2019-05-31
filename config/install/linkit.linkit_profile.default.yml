@@ -1,0 +1,19 @@
+langcode: en
+status: true
+dependencies:
+  module:
+    - node
+id: default
+label: Default
+description: 'A default Linkit profile'
+attributes: {  }
+matchers:
+  873bc299-f624-43ea-9306-8ef02d172a01:
+    uuid: 873bc299-f624-43ea-9306-8ef02d172a01
+    id: 'entity:node'
+    weight: 0
+    settings:
+      result_description: 'by [node:author] | [node:created:medium] ([node:content-type:machine-name])'
+      bundles: {  }
+      group_by_bundle: false
+      include_unpublished: false

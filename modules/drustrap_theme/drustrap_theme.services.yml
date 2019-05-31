@@ -1,0 +1,6 @@
+drustrap:
+  drustrap_theme.twig.remove_html_comments:
+    class: Drupal\drustrap_theme\TwigExtension\RemoveHtmlComments
+    arguments: ['@renderer']
+    tags:
+      - { name: twig.extension }

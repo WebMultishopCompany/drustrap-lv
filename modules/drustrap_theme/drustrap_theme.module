@@ -1,0 +1,258 @@
+<?php
+use Drupal\Core\Database\Query\AlterableInterface;
+use Drupal\field\Entity\FieldConfig;
+use Drupal\image\Plugin\Field\FieldType\ImageItem;
+
+/**
+ * @implements hook_form_alter().
+ *
+ * @param array $form
+ * @param \Drupal\Core\Form\FormStateInterface $form_state
+ * @param string $form_id
+ */
+function drustrap_theme_form_alter(
+  &$form,
+  \Drupal\Core\Form\FormStateInterface $form_state,
+  $form_id
+) {
+  $form_object = $form_state->getFormObject();
+  if ($form_object instanceof \Drupal\Core\Entity\EntityForm) {
+    $entity = $form_object->getEntity();
+    $entity_type_id = str_replace('_', '-', $entity->getEntityTypeId());
+    $entity_bundle = str_replace('_', '-', $entity->bundle());
+    $entity_form_display = str_replace('_', '-', $form_object->getOperation());
+
+    if (isset($form['#attributes']['class'])) {
+      foreach ($form['#attributes']['class'] as $index => $class) {
+        if (
+          $class == $entity_type_id . '-form' ||
+          $class == implode(
+            '-',
+            [
+              $entity_type_id,
+              $entity_bundle,
+              $entity_form_display,
+              'form'
+            ]
+          )
+        ) {
+          unset($form['#attributes']['class'][$index]);
+        }
+      }
+    }
+
+    $form['#attributes']['class'][] = 'form-' . $entity_type_id;
+    $form['#attributes']['class'][] = 'form-' . $entity_type_id . '_bundle_' . $entity_bundle;
+    $form['#attributes']['class'][] = 'form-display';
+    $form['#attributes']['class'][] = 'form-display--' . $entity_form_display;
+  }
+}
+
+/**
+ * @param array $build
+ * @param \Drupal\Core\Entity\EntityInterface $entity
+ * @param \Drupal\Core\Entity\Display\EntityViewDisplayInterface $display
+ * @param $view_mode
+ */
+function drustrap_theme_entity_view(
+  array &$build,
+  \Drupal\Core\Entity\EntityInterface $entity,
+  \Drupal\Core\Entity\Display\EntityViewDisplayInterface $display,
+  $view_mode
+) {
+  $sanitized_entity_type = str_replace('_', '-', $entity->getEntityTypeId());
+  $sanitized_entity_bundle = str_replace('_', '-', $entity->bundle());
+  $sanitized_view_mode = str_replace('_', '-', $view_mode);
+
+  $build['#theme_wrappers'] = [
+    'container' => [
+      '#attributes' => [
+        'class' => [
+          $sanitized_entity_type,
+          $sanitized_entity_type . '--' . $sanitized_entity_bundle,
+          $sanitized_entity_type . '--' . $sanitized_entity_bundle . '--' . $sanitized_view_mode,
+          $sanitized_entity_type . '--' . $sanitized_view_mode,
+        ],
+      ],
+    ],
+  ];
+
+  if ($entity instanceof \Drupal\block_content\Entity\BlockContent) {
+    $build['#theme'] = 'block_content';
+  }
+}
+
+/**
+ * Implements hook_theme
+ */
+function drustrap_theme_theme() {
+  return [
+    'block_content' => [
+      'render element' => 'content',
+    ],
+  ];
+}
+
+/**
+ * Provides suggestions for different parts, so that blocks are properly loaded
+ *
+ * @see hook_theme_suggestions_alter()
+ *
+ * @param array $suggestions
+ * @param array $variables
+ * @param string $hook
+ */
+function drustrap_theme_theme_suggestions_alter(
+  array &$suggestions,
+  array $variables,
+  $hook
+) {
+  switch ($hook) {
+    case 'image':
+      if (isset($variables['attributes']['entity'])) {
+        $entity = $variables['attributes']['entity'];
+        $separator = '__';
+        $suggestions[] = implode(
+          $separator,
+          [
+            $hook,
+            $entity['#field_type']
+          ]
+        );
+        $suggestions[] = implode(
+          $separator,
+          [
+            $hook,
+            $entity['#entity_type']
+          ]
+        );
+        $suggestions[] = implode(
+          $separator,
+          [
+            $hook,
+            $entity['#entity_type'],
+            $entity['#field_name']
+          ]
+        );
+        $suggestions[] = implode(
+          $separator,
+          [
+            $hook,
+            $entity['#entity_type'],
+            $entity['#field_name'],
+            $entity['#bundle']
+          ]
+        );
+        if (isset($entity['#view_mode'])) {
+          $suggestions[] = implode(
+            $separator,
+            [
+              $hook,
+              $entity['#entity_type'],
+              $entity['#field_name'],
+              $entity['#bundle'],
+              $entity['#view_mode']
+            ]
+          );
+        }
+      }
+    break;
+  }
+}
+
+/**
+ * @implements template_preprocess_HOOK()
+ *
+ * @param array $variables
+ */
+function drustrap_theme_preprocess_field(&$variables) {
+  if ($variables['field_type'] == 'image') {
+    if (
+      isset($variables['items']) &&
+      isset($variables['element']['#view_mode'])
+    ) {
+      foreach ($variables['items'] as &$item) {
+        $item['content']['#item_attributes']['#view_mode'] = $variables['element']['#view_mode'];
+      }
+    }
+  }
+}
+
+/**
+ * @implements template_preprocess_HOOK()
+ *
+ * @param array $variables
+ */
+function drustrap_theme_preprocess_image_formatter(&$variables) {
+  // drustrap_preprocess_image_formatter and drustrap_preprocess_image
+  // is a workaround to pass image host entity info to image field.
+  if (
+    isset($variables['item']) &&
+    isset($variables['image']) &&
+    $variables['item']
+  ) {
+    $imageItem = $variables['item'];
+    if ($imageItem instanceof ImageItem) {
+      /** @var ImageItem $imageItem */
+      /** @var FieldConfig $fieldDefinition */
+      $fieldDefinition = $imageItem->getFieldDefinition();
+
+      $entity = [
+        '#field_type' => $fieldDefinition->getType(),
+        '#bundle' => $fieldDefinition->getTargetBundle(),
+        '#entity_type' => $fieldDefinition->getTargetEntityTypeId(),
+        '#field_name' => $fieldDefinition->getName(),
+        '#image' => $imageItem,
+      ];
+      if (isset($variables['item_attributes']['#view_mode'])) {
+        $entity['#view_mode'] = $variables['item_attributes']['#view_mode'];
+      }
+      $variables['image']['#attributes']['entity'] = $entity;
+    }
+  }
+}
+
+/**
+ * @implements template_preprocess_HOOK()
+ *
+ * @param array $variables
+ */
+function drustrap_theme_preprocess_image(&$variables) {
+  if (isset($variables['attributes']['entity'])) {
+    $variables['#entity'] = $variables['attributes']['entity'];
+    unset($variables['attributes']['entity']);
+  }
+  if (isset($variables['attributes']['#view_mode'])) {
+    unset($variables['attributes']['#view_mode']);
+  }
+}
+
+/**
+ * Implements hook_entity_base_field_info_alter().
+ *
+ * @param $fields
+ * @param \Drupal\Core\Entity\EntityTypeInterface $entity_type
+ */
+function drustrap_theme_entity_base_field_info_alter(
+  &$fields,
+  \Drupal\Core\Entity\EntityTypeInterface $entity_type
+) {
+  if (
+    $entity_type->id() == 'menu_link_content' &&
+    !empty($fields['expanded'])
+  ) {
+    $fields['expanded']->setDefaultValue(TRUE);
+  }
+}
+
+/**
+ * Implements hook_query_TAG_alter().
+ *
+ * @param \Drupal\Core\Database\Query\AlterableInterface $query
+ */
+function drustrap_theme_query_search_node_search_alter(
+  AlterableInterface $query
+) {
+  $language = \Drupal::languageManager()->getCurrentLanguage()->getId();
+  $query->condition('n.langcode', $language, '=');
+}

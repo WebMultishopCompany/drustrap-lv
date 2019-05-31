@@ -1,0 +1,8 @@
+name: CKEditor Bootstrap table plugin
+type: module
+description: Provides Bootstrap tables for CKEditor
+core: 8.x
+package: CKEditor
+version: VERSION
+dependencies:
+  - ckeditor

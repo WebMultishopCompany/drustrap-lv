@@ -1,0 +1,10 @@
+.toolbar .toolbar-bar .toolbar-tab.toolbar-tab-updates {
+  float: right;
+}
+.toolbar .toolbar-bar .toolbar-tab.toolbar-tab-updates .toolbar-item.error {
+  color: #de5d42;
+}
+.toolbar .toolbar-bar .toolbar-tab.toolbar-tab-updates .toolbar-item.warning {
+  color: #c3973f;
+}
+/*# sourceMappingURL=toolbar-update-notificaitons.css.map */

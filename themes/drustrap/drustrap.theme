@@ -1,0 +1,415 @@
+<?php
+
+use Drupal\Core\Render\Element;
+
+/**
+ * @implements template_preprocess_HOOK()
+ *
+ * @param array $variables
+ */
+function drustrap_preprocess_links(&$variables)
+{
+  if ($variables['theme_hook_original'] == 'links__language_block') {
+    $variables['active_language'] = \Drupal::languageManager()->getCurrentLanguage()->getId();
+  }
+}
+
+/**
+ * Provides suggestions for different parts, so that blocks are properly loaded
+ *
+ * @param array $suggestions
+ * @param array $variables
+ * @param string $hook
+ * @see hook_theme_suggestions_alter()
+ *
+ */
+function drustrap_theme_suggestions_alter(array &$suggestions, array $variables, $hook)
+{
+  switch ($hook) {
+    case 'field':
+      $element = $variables['element'];
+      if (isset($variables['element']) && $variables['element']['#field_type'] == 'image') {
+        $suggestions[] = implode(
+          '__',
+          [
+            $hook,
+            $element['#formatter'],
+            $element['#field_name']
+          ]
+        );
+        $suggestions[] = implode(
+          '__',
+          [
+            $hook,
+            $element['#entity_type'],
+            $element['#formatter'],
+            $element['#field_name']
+          ]
+        );
+        $suggestions[] = implode(
+          '__',
+          [
+            $hook,
+            $element['#entity_type'],
+            $element['#formatter'],
+            $element['#field_name'],
+            $element['#bundle']
+          ]
+        );
+        usort($suggestions, function ($a, $b) {
+          return strlen($a) - strlen($b);
+        });
+      }
+      $suggestions[] = implode(
+        '__',
+        [
+          $hook,
+          $element['#entity_type'],
+          $element['#view_mode'],
+          $element['#field_name']
+        ]
+      );
+      $suggestions[] = implode(
+        '__',
+        [
+          $hook,
+          $element['#entity_type'],
+          $element['#view_mode'],
+          $element['#field_name'],
+          $element['#bundle']
+        ]
+      );
+      break;
+    case 'block':
+      /** @var Drupal\block_content\Entity\BlockContent|NULL $blockContent */
+      if (isset($variables['elements']['content']['#block_content'])) {
+        $block_content = $variables['elements']['content']['#block_content'];
+        if (!is_null($block_content)) {
+          $block_type = $block_content->bundle();
+          $suggestions[] = $hook . '__' . $block_type;
+        }
+      }
+      break;
+    case 'block_content':
+      /** @var Drupal\block_content\Entity\BlockContent|NULL $blockContent */
+      $block_content = $variables['content']['#block_content'];
+      $sanitized_view_mode = strtr($variables['content']['#view_mode'], '.', '_');
+
+      $suggestions[] = $hook . '__' . $sanitized_view_mode;
+      $suggestions[] = $hook . '__' . $block_content->bundle();
+      $suggestions[] = $hook . '__' . $block_content->bundle() . '__' . $sanitized_view_mode;
+      $suggestions[] = $hook . '__' . $block_content->id();
+      $suggestions[] = $hook . '__' . $block_content->id() . '__' . $sanitized_view_mode;
+      break;
+    case 'form_inner':
+      // Add suggestions for provided #theme hooks.
+      foreach (array_reverse($variables['form']['#theme']) as $theme) {
+        if ($theme !== $hook) {
+          $suggestions[] = $hook . '__' . $theme;
+        }
+      }
+      break;
+    case 'image':
+      if (isset($variables['style_name'])) {
+        $suggestions[] = $hook . '__' . $variables['style_name'];
+      }
+      break;
+  }
+}
+
+/**
+ * Implements hook_form_alter().
+ *
+ * @param $form
+ * @param \Drupal\Core\Form\FormStateInterface $form_state
+ * @param $form_id
+ */
+function drustrap_form_alter(&$form, \Drupal\Core\Form\FormStateInterface $form_state, $form_id)
+{
+  // If #theme is set we test if it's a string. If it's a string we convert to
+  // array so we can append our base theme. If no #theme was specified by initial render
+  // array, FormBuilder adds $form_id and $form_base_id to #theme array.
+  if (isset($form['#theme'])) {
+    if (!is_array($form['#theme'])) {
+      $form['#theme'] = [
+        $form['#theme'],
+      ];
+    }
+  }
+  $form['#theme'][] = 'form_inner';
+}
+
+/**
+ * Implements hook_preprocess_HOOK().
+ *
+ * @param $variables
+ */
+function drustrap_preprocess_form_inner(&$variables)
+{
+  // We unset #prefix and #suffix if they were provided because
+  // forms #theme_wrapper which invokes theme 'form' already has
+  // rendered #prefix and #suffix.
+  if (isset($variables['form']['#prefix'])) {
+    unset($variables['form']['#prefix']);
+  }
+  if (isset($variables['form']['#suffix'])) {
+    unset($variables['form']['#suffix']);
+  }
+}
+
+/**
+ * Implements hook_theme().
+ */
+function drustrap_theme()
+{
+  // Define default theme for form inner wrapper.
+  return [
+    'form_inner' => [
+      'render element' => 'form',
+      'path' => drupal_get_path('theme', 'drustrap') . '/templates/form',
+    ],
+  ];
+}
+
+/**
+ * @implements template_preprocess_HOOK()
+ *
+ * @param array $variables
+ */
+function drustrap_preprocess_region(&$variables)
+{
+  $variables['attributes']['class'][] = 'region';
+  $variables['attributes']['class'][] = 'region--' . str_replace('_', '-', $variables['region']);
+}
+
+/**
+ * @implements template_preprocess_HOOK()
+ *
+ * @param array $variables
+ */
+function drustrap_preprocess_block(&$variables)
+{
+  if (isset($variables['configuration']['machine_name'])) {
+    $block_class = 'block--' . str_replace('_', '-', $variables['configuration']['machine_name']);
+  } else {
+    $block_id = $variables['attributes']['id'];
+    if (strpos($block_id, 'block-') === 0) {
+      $block_id = str_replace('block-', '', $block_id);
+    }
+
+    $block_id_parts = explode('--', $block_id);
+    $block_id_last_part = end($block_id_parts);
+    if (is_numeric($block_id_last_part)) {
+      array_pop($block_id_parts);
+      $block_id = implode('--', $block_id_parts);
+    }
+
+    $block_class = 'block--' . $block_id;
+    $block_class = str_replace('_block-', '_', $block_class);
+
+    $variables['attributes']['class'][] = $block_id;
+  }
+  $variables['attributes']['class'][] = 'block';
+  $variables['attributes']['class'][] = $block_class;
+  if (isset($variables['attributes']['id'])) {
+    unset($variables['attributes']['id']);
+  }
+  $variables['title_attributes']['class'][] = 'block__title';
+}
+
+/**
+ * @implements template_preprocess_HOOK()
+ *
+ * @param array $variables
+ */
+function drustrap_preprocess_menu(&$variables)
+{
+  $variables['attributes']['class'][] = 'menu';
+  $variables['attributes']['class'][] = 'menu--' . str_replace('_', '-',
+      str_replace('menu__', '', $variables['theme_hook_original']));
+}
+
+/**
+ * @implements template_preprocess_HOOK()
+ *
+ * @param array $variables
+ */
+function drustrap_preprocess_field(&$variables)
+{
+  $variables['attributes']['class'][] = 'field';
+  $variables['attributes']['class'][] = 'field--' . str_replace('_', '-',
+      str_replace('field_', '', $variables['field_name']));
+  $variables['attributes']['class'][] = 'label--' . $variables['label_display'];
+}
+
+/**
+ * @implements template_preprocess_HOOK()
+ *
+ * @param array $variables
+ */
+function drustrap_preprocess_text_format_wrapper(&$variables)
+{
+  $variables['attributes']['class'][] = 'form-group';
+}
+
+/**
+ * @implements template_preprocess_HOOK()
+ *
+ * @param array $variables
+ */
+function drustrap_preprocess_form_element(&$variables)
+{
+  if (!isset($variables['element']['#format'])) {
+    $variables['attributes']['class'][] = 'form-group';
+  }
+}
+
+/**
+ * @implements template_preprocess_HOOK()
+ *
+ * @param array $variables
+ */
+function drustrap_preprocess_input(&$variables)
+{
+  _drustrap_preprocess_input_element($variables);
+}
+
+/**
+ * @implements template_preprocess_HOOK()
+ *
+ * @param array $variables
+ */
+function drustrap_preprocess_input__textfield(&$variables)
+{
+  _drustrap_preprocess_input_element($variables);
+}
+
+/**
+ * @implements template_preprocess_HOOK()
+ *
+ * @param array $variables
+ */
+function drustrap_preprocess_textarea(&$variables)
+{
+  _drustrap_preprocess_input_element($variables);
+}
+
+/**
+ * @implements template_preprocess_HOOK()
+ *
+ * @param array $variables
+ */
+function drustrap_preprocess_input__submit(&$variables)
+{
+  _drustrap_preprocess_input_element($variables);
+}
+
+/**
+ * @implements template_preprocess_HOOK()
+ *
+ * @param array $variables
+ */
+function drustrap_preprocess_select(&$variables)
+{
+  _drustrap_preprocess_input_element($variables);
+}
+
+/**
+ * @param array $variables
+ */
+function _drustrap_preprocess_input_element(&$variables)
+{
+  if (isset($variables['element']['#type'])) {
+    $type = $variables['element']['#type'];
+    if (($type == 'button' || $type == 'submit')) {
+      $variables['element']['#attributes']['class'][] = 'btn';
+      if (isset($variables['attributes'])) {
+        $variables['attributes']['class'][] = 'btn';
+      }
+    } else {
+      if (in_array($type, [
+        'entity_autocomplete',
+        'textfield',
+        'textarea',
+        'select',
+        'password',
+        'email',
+        'number',
+        'date',
+        'search'
+      ])) {
+        $variables['element']['#attributes']['class'][] = 'form-control';
+        if (isset($variables['attributes'])) {
+          $variables['attributes']['class'][] = 'form-control';
+        }
+      }
+    }
+  }
+}
+
+/**
+ * @implements template_preprocess_HOOK()
+ *
+ * @param array $variables
+ */
+function drustrap_preprocess_image(&$variables)
+{
+  $variables['attributes']['class'][] = 'img-fluid';
+}
+
+/**
+ * @implements template_preprocess_HOOK()
+ *
+ * @param array $variables
+ */
+function drustrap_preprocess_menu_local_task(&$variables)
+{
+  $variables['link']['#attributes']['class'][] = 'nav-link';
+  if (isset($variables['is_active']) && $variables['is_active'] == true) {
+    $variables['link']['#attributes']['class'][] = 'active';
+  }
+}
+
+
+/**
+ * Implements hook_page_attachments_alter().
+ *
+ * @param array $attachments
+ */
+function drustrap_page_attachments_alter(array &$attachments)
+{
+  _drustrap_remove_header_links($attachments);
+}
+
+/**
+ * @param array $attachments
+ */
+function _drustrap_remove_header_links(array &$attachments)
+{
+  if (!isset($attachments['#attached']['html_head_link'])) {
+    return;
+  }
+
+  $linkKeys = [
+    'delete-form',
+    'edit-form',
+    'version-history',
+    'latest-version',
+    'revision',
+    'display',
+    'drupal:content-translation-overview',
+    'drupal:content-translation-add',
+    'drupal:content-translation-edit',
+    'drupal:content-translation-delete',
+    'devel-load',
+    'devel-render',
+    'devel-definition',
+    'token-devel',
+  ];
+
+  foreach ($attachments['#attached']['html_head_link'] as $key => $value) {
+    if (isset($value[0]['rel']) && in_array($value[0]['rel'], $linkKeys)) {
+      unset($attachments['#attached']['html_head_link'][$key]);
+    }
+  }
+}

@@ -1,0 +1,23 @@
+<?php
+
+/**
+ * @file
+ * Main code for CKEditor Bootstrap Include module.
+ */
+
+/**
+ * Implements hook_ckeditor_plugin().
+ */
+function ckeditor_bootstrap_include_ckeditor_plugin() {
+  return array(
+    'jsplus_bootstrap_include' => array(
+      'name' => 'jsplus_bootstrap_include',
+      'desc' => t('CKEditor Bootstrap Include. See <a href=":addon_page_url">@addon_page_title</a> for more details.',
+        array(
+          ':addon_page_url' => 'http://js.plus/products/bootstrap-tools/bootstrap-include-css-js-plugin',
+          '@addon_page_title' => t('addon page'),
+        )),
+      'path' => libraries_get_path('jsplus_bootstrap_include')
+    ),
+  );
+}

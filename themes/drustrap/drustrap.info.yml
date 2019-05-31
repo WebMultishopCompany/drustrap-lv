@@ -1,0 +1,18 @@
+type: theme
+base theme: false
+version: 8.x-0.3.0
+core: 8.x
+
+name: 'Drustrap'
+description: 'Drustrap theme.'
+package: 'Drustrap'
+
+regions:
+  content: 'Content'
+
+libraries:
+  - 'drustrap/bootstrap'
+
+libraries-override:
+  core/drupal.dialog: drustrap/bootstrap.dialog
+  core/drupal.dialog.ajax: drustrap/bootstrap.dialog.ajax
